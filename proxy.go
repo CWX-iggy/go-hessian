@@ -1,6 +1,7 @@
 package hessian
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,10 +18,12 @@ const (
 
 // ProxyConfig config for NewProxy
 type ProxyConfig struct {
-	Version version
-	URL     string
-	TypeMap map[string]reflect.Type
-	Client  *http.Client
+	Version  version
+	URL      string
+	Username string
+	Password string
+	TypeMap  map[string]reflect.Type
+	Client   *http.Client
 }
 
 // Validate Proxy Config
@@ -64,6 +67,10 @@ func (c *Proxy) Invoke(m string, args ...interface{}) ([]interface{}, error) {
 
 	req.Header.Set("Content-Type", "x-application/hessian")
 	req.Header.Set("Accept-Encoding", "deflate")
+
+	if c.conf.Username != "" && c.conf.Password != "" {
+		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(c.conf.Username+":"+c.conf.Password)))
+	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
